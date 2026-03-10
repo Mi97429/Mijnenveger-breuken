@@ -42,15 +42,7 @@ Voorbeelden: 5/6 ÷ 2/3, 1 1/2 + 3/4, 7/12 × 4/5, 11/15 - 2/9`,
 
 async function fetchAIQuestions(level) {
   const cfg = LEVELS[level];
-  const response = await fetch("/api/questions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4000,
-      messages: [{
-        role: "user",
-        content: `${cfg.prompt}
+  const prompt = `${cfg.prompt}
 Geef ALLEEN een JSON-array terug, geen uitleg, geen markdown, geen backticks.
 Elk object heeft deze structuur:
 {"question": "1/2 + 1/4 = ?", "options": ["3/4", "2/6", "1/3", "2/4"], "answer": "3/4"}
@@ -58,17 +50,19 @@ Regels:
 - "answer" moet altijd in "options" staan
 - Geef altijd 4 opties, waarvan 1 correct
 - Vereenvoudig het antwoord waar mogelijk (bv. 2/4 moet 1/2 worden)
-- Alle 20 vragen moeten verschillend zijn`,
-      }],
-    }),
+- Alle 20 vragen moeten verschillend zijn`;
+
+  const response = await fetch("/api/questions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
   });
   if (!response.ok) {
     const err = await response.text();
     throw new Error("HTTP " + response.status + ": " + err);
   }
   const data = await response.json();
-  const text = data.content.map(i => i.text || "").join("");
-  const clean = text.replace(/```json|```/g, "").trim();
+  const clean = data.text.replace(/```json|```/g, "").trim();
   return JSON.parse(clean);
 }
 
