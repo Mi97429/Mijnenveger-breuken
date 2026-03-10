@@ -42,14 +42,9 @@ Voorbeelden: 5/6 ÷ 2/3, 1 1/2 + 3/4, 7/12 × 4/5, 11/15 - 2/9`,
 
 async function fetchAIQuestions(level) {
   const cfg = LEVELS[level];
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/questions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": window.ANTHROPIC_API_KEY || "",
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4000,
@@ -79,7 +74,6 @@ Regels:
 
 function parseFraction(str) {
   str = str.trim().replace(",", ".");
-  // Mixed number e.g. "1 1/2"
   const mixed = str.match(/^(\d+)\s+(\d+)\/(\d+)$/);
   if (mixed) return parseInt(mixed[1]) + parseInt(mixed[2]) / parseInt(mixed[3]);
   if (str.includes("/")) {
@@ -117,7 +111,7 @@ function createBoard(questions, mineCount) {
 }
 
 export default function MijnenVeger() {
-  const [screen, setScreen] = useState("menu"); // menu, loading, playing, won, lost, error
+  const [screen, setScreen] = useState("menu");
   const [level, setLevel] = useState(null);
   const [board, setBoard] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -209,13 +203,11 @@ export default function MijnenVeger() {
       fontFamily: "'Courier New', monospace",
       padding: "20px", position: "relative", overflow: "hidden",
     }}>
-      {/* Scanlines */}
       <div style={{
         position: "fixed", inset: 0, pointerEvents: "none", zIndex: 100,
         backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,100,0.015) 2px, rgba(0,255,100,0.015) 4px)",
       }} />
 
-      {/* Title */}
       <div style={{ textAlign: "center", marginBottom: screen === "menu" ? "32px" : "20px" }}>
         <div style={{ fontSize: "11px", letterSpacing: "6px", color: "#4ade80", textTransform: "uppercase", marginBottom: "6px", opacity: 0.7 }}>
           WISKUNDE ARCADE
@@ -229,7 +221,6 @@ export default function MijnenVeger() {
         </h1>
       </div>
 
-      {/* MENU SCREEN */}
       {screen === "menu" && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", animation: "fadeIn 0.3s ease" }}>
           <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", letterSpacing: "3px", marginBottom: "8px" }}>
@@ -278,10 +269,8 @@ export default function MijnenVeger() {
         </div>
       )}
 
-      {/* PLAYING SCREEN */}
       {screen === "playing" && board && (
         <>
-          {/* HUD */}
           <div style={{
             display: "flex", gap: "20px", marginBottom: "20px",
             background: "rgba(255,255,255,0.04)", border: `1px solid ${cfg.color}33`,
@@ -307,7 +296,6 @@ export default function MijnenVeger() {
             {combo > 1 && <><Divider /><HudItem label="COMBO" value={`x${combo}`} color="#fbbf24" /></>}
           </div>
 
-          {/* Board */}
           <div style={{
             position: "relative",
             display: "grid",
@@ -345,7 +333,6 @@ export default function MijnenVeger() {
         </>
       )}
 
-      {/* Modal: Question */}
       {activeCell && (
         <Modal>
           <div style={{ fontSize: "11px", letterSpacing: "4px", color: cfg.color, marginBottom: "12px", opacity: 0.8 }}>BREUK GEVONDEN</div>
@@ -370,7 +357,6 @@ export default function MijnenVeger() {
         </Modal>
       )}
 
-      {/* Modal: Loading */}
       {screen === "loading" && (
         <Modal>
           <div style={{ fontSize: "48px", marginBottom: "16px", animation: "spin 1.5s linear infinite", display: "inline-block" }}>⚙️</div>
@@ -381,7 +367,6 @@ export default function MijnenVeger() {
         </Modal>
       )}
 
-      {/* Modal: Error */}
       {screen === "error" && (
         <Modal>
           <div style={{ fontSize: "48px", marginBottom: "12px" }}>⚠️</div>
@@ -394,7 +379,6 @@ export default function MijnenVeger() {
         </Modal>
       )}
 
-      {/* Modal: Game Over */}
       {screen === "lost" && (
         <Modal>
           <div style={{ fontSize: "60px", marginBottom: "8px" }}>💥</div>
@@ -408,7 +392,6 @@ export default function MijnenVeger() {
         </Modal>
       )}
 
-      {/* Modal: Won */}
       {screen === "won" && (
         <Modal>
           <div style={{ fontSize: "60px", marginBottom: "8px" }}>🏆</div>
