@@ -40,30 +40,124 @@ Voorbeelden: 5/6 ÷ 2/3, 1 1/2 + 3/4, 7/12 × 4/5, 11/15 - 2/9`,
   },
 };
 
-async function fetchAIQuestions(level) {
-  const cfg = LEVELS[level];
-  const prompt = `${cfg.prompt}
-Geef ALLEEN een JSON-array terug, geen uitleg, geen markdown, geen backticks.
-Elk object heeft deze structuur:
-{"question": "1/2 + 1/4 = ?", "options": ["3/4", "2/6", "1/3", "2/4"], "answer": "3/4"}
-Regels:
-- "answer" moet altijd in "options" staan
-- Geef altijd 4 opties, waarvan 1 correct
-- Vereenvoudig het antwoord waar mogelijk (bv. 2/4 moet 1/2 worden)
-- Alle 20 vragen moeten verschillend zijn`;
+const QUESTION_BANK = {
+  easy: [
+    { question: "1/2 + 1/4 = ?", options: ["3/4", "1/4", "2/6", "1/3"], answer: "3/4" },
+    { question: "3/4 - 1/4 = ?", options: ["1/2", "2/4", "1/4", "3/8"], answer: "1/2" },
+    { question: "2/3 + 1/3 = ?", options: ["1", "2/6", "3/3", "1/3"], answer: "1" },
+    { question: "1/2 + 1/2 = ?", options: ["1", "2/4", "1/4", "2/2"], answer: "1" },
+    { question: "3/4 + 1/8 = ?", options: ["7/8", "4/8", "5/8", "1"], answer: "7/8" },
+    { question: "5/6 - 1/6 = ?", options: ["2/3", "4/6", "1/2", "5/12"], answer: "2/3" },
+    { question: "1/3 + 1/6 = ?", options: ["1/2", "2/9", "2/6", "1/4"], answer: "1/2" },
+    { question: "7/8 - 3/8 = ?", options: ["1/2", "4/8", "3/4", "1/4"], answer: "1/2" },
+    { question: "2/5 + 1/5 = ?", options: ["3/5", "3/10", "1/2", "2/5"], answer: "3/5" },
+    { question: "5/8 - 1/8 = ?", options: ["1/2", "4/8", "3/4", "1/4"], answer: "1/2" },
+    { question: "1/4 + 1/4 = ?", options: ["1/2", "2/8", "1/4", "2/4"], answer: "1/2" },
+    { question: "2/3 - 1/6 = ?", options: ["1/2", "1/6", "1/3", "3/6"], answer: "1/2" },
+    { question: "1/6 + 1/6 = ?", options: ["1/3", "2/12", "1/2", "2/6"], answer: "1/3" },
+    { question: "3/8 + 1/8 = ?", options: ["1/2", "4/16", "4/8", "3/4"], answer: "1/2" },
+    { question: "4/6 - 1/6 = ?", options: ["1/2", "3/6", "1/3", "3/12"], answer: "1/2" },
+    { question: "1/2 - 1/4 = ?", options: ["1/4", "2/4", "1/8", "1/2"], answer: "1/4" },
+    { question: "5/6 - 1/3 = ?", options: ["1/2", "4/6", "1/3", "2/3"], answer: "1/2" },
+    { question: "1/8 + 3/8 = ?", options: ["1/2", "4/16", "1/4", "3/8"], answer: "1/2" },
+    { question: "2/4 + 1/4 = ?", options: ["3/4", "3/8", "1/2", "1/4"], answer: "3/4" },
+    { question: "7/8 - 1/8 = ?", options: ["3/4", "6/8", "7/16", "1/2"], answer: "3/4" },
+    { question: "1/3 + 2/6 = ?", options: ["2/3", "3/9", "1/2", "3/6"], answer: "2/3" },
+    { question: "3/4 - 1/8 = ?", options: ["5/8", "2/4", "6/8", "1/2"], answer: "5/8" },
+    { question: "1/6 + 2/6 = ?", options: ["1/2", "3/12", "1/3", "2/6"], answer: "1/2" },
+    { question: "5/8 + 1/8 = ?", options: ["3/4", "6/16", "1/2", "6/8"], answer: "3/4" },
+    { question: "4/8 + 2/8 = ?", options: ["3/4", "6/16", "1/2", "6/8"], answer: "3/4" },
+    { question: "2/6 + 2/6 = ?", options: ["2/3", "4/12", "1/3", "4/6"], answer: "2/3" },
+    { question: "3/6 + 1/6 = ?", options: ["2/3", "4/12", "1/2", "4/6"], answer: "2/3" },
+    { question: "1/4 + 3/8 = ?", options: ["5/8", "4/12", "1/2", "2/8"], answer: "5/8" },
+    { question: "5/6 - 2/6 = ?", options: ["1/2", "3/12", "2/3", "1/3"], answer: "1/2" },
+    { question: "3/8 + 3/8 = ?", options: ["3/4", "6/16", "1/2", "6/8"], answer: "3/4" },
+    { question: "1/2 + 1/8 = ?", options: ["5/8", "2/8", "3/4", "1/4"], answer: "5/8" },
+    { question: "2/3 + 1/6 = ?", options: ["5/6", "3/9", "1/2", "3/6"], answer: "5/6" },
+    { question: "7/8 - 1/4 = ?", options: ["5/8", "6/8", "1/2", "3/4"], answer: "5/8" },
+    { question: "1/3 + 1/3 = ?", options: ["2/3", "2/6", "1/6", "1/2"], answer: "2/3" },
+    { question: "4/6 + 1/6 = ?", options: ["5/6", "5/12", "1", "2/3"], answer: "5/6" },
+  ],
+  medium: [
+    { question: "3/8 + 5/12 = ?", options: ["19/24", "8/20", "3/4", "5/8"], answer: "19/24" },
+    { question: "2/3 × 3/4 = ?", options: ["1/2", "6/12", "5/7", "1/4"], answer: "1/2" },
+    { question: "7/10 - 1/4 = ?", options: ["9/20", "6/6", "1/2", "3/10"], answer: "9/20" },
+    { question: "5/6 + 3/8 = ?", options: ["29/24", "8/14", "1", "7/8"], answer: "29/24" },
+    { question: "3/5 × 5/9 = ?", options: ["1/3", "15/45", "2/5", "1/5"], answer: "1/3" },
+    { question: "7/12 - 1/4 = ?", options: ["1/3", "6/8", "5/12", "1/4"], answer: "1/3" },
+    { question: "4/9 + 2/3 = ?", options: ["10/9", "6/12", "1", "8/9"], answer: "10/9" },
+    { question: "5/8 × 4/5 = ?", options: ["1/2", "20/40", "2/5", "4/8"], answer: "1/2" },
+    { question: "11/12 - 2/3 = ?", options: ["1/4", "9/9", "3/12", "1/3"], answer: "1/4" },
+    { question: "2/5 + 7/10 = ?", options: ["11/10", "9/15", "1", "9/10"], answer: "11/10" },
+    { question: "3/4 × 8/9 = ?", options: ["2/3", "24/36", "3/4", "1/2"], answer: "2/3" },
+    { question: "5/6 - 3/8 = ?", options: ["11/24", "2/3", "7/24", "1/2"], answer: "11/24" },
+    { question: "1/3 + 5/12 = ?", options: ["3/4", "6/15", "7/12", "5/9"], answer: "3/4" },
+    { question: "7/8 × 4/7 = ?", options: ["1/2", "28/56", "4/8", "1/4"], answer: "1/2" },
+    { question: "5/9 + 1/3 = ?", options: ["8/9", "6/12", "2/3", "7/9"], answer: "8/9" },
+    { question: "3/10 + 2/5 = ?", options: ["7/10", "5/15", "1/2", "3/5"], answer: "7/10" },
+    { question: "2/3 × 9/10 = ?", options: ["3/5", "18/30", "2/5", "1/2"], answer: "3/5" },
+    { question: "7/10 + 3/5 = ?", options: ["13/10", "10/15", "1", "11/10"], answer: "13/10" },
+    { question: "5/12 + 1/4 = ?", options: ["2/3", "6/16", "7/12", "1/2"], answer: "2/3" },
+    { question: "4/5 × 5/8 = ?", options: ["1/2", "20/40", "2/4", "5/8"], answer: "1/2" },
+    { question: "11/12 - 1/3 = ?", options: ["7/12", "10/9", "3/4", "1/2"], answer: "7/12" },
+    { question: "1/6 + 5/12 = ?", options: ["7/12", "6/18", "1/2", "2/3"], answer: "7/12" },
+    { question: "3/7 × 7/9 = ?", options: ["1/3", "21/63", "3/9", "2/7"], answer: "1/3" },
+    { question: "9/10 - 2/5 = ?", options: ["1/2", "7/5", "5/10", "2/5"], answer: "1/2" },
+    { question: "5/8 + 1/4 = ?", options: ["7/8", "6/12", "3/4", "6/8"], answer: "7/8" },
+    { question: "2/9 + 5/9 = ?", options: ["7/9", "7/18", "1/3", "2/3"], answer: "7/9" },
+    { question: "3/4 × 2/9 = ?", options: ["1/6", "6/36", "2/12", "1/3"], answer: "1/6" },
+    { question: "7/8 - 5/12 = ?", options: ["11/24", "2/4", "1/3", "5/8"], answer: "11/24" },
+    { question: "4/7 + 2/7 = ?", options: ["6/7", "6/14", "1", "5/7"], answer: "6/7" },
+    { question: "5/6 × 3/5 = ?", options: ["1/2", "15/30", "1/3", "2/3"], answer: "1/2" },
+    { question: "7/12 + 1/6 = ?", options: ["3/4", "8/18", "5/6", "9/12"], answer: "3/4" },
+    { question: "3/8 × 4/9 = ?", options: ["1/6", "12/72", "2/9", "1/3"], answer: "1/6" },
+    { question: "5/6 - 1/4 = ?", options: ["7/12", "4/2", "2/3", "1/2"], answer: "7/12" },
+    { question: "2/7 + 3/7 = ?", options: ["5/7", "5/14", "1/2", "6/7"], answer: "5/7" },
+    { question: "4/5 - 3/10 = ?", options: ["1/2", "1/5", "7/10", "3/5"], answer: "1/2" },
+  ],
+  hard: [
+    { question: "5/6 ÷ 2/3 = ?", options: ["5/4", "10/18", "3/4", "1/2"], answer: "5/4" },
+    { question: "1 1/2 + 3/4 = ?", options: ["9/4", "5/4", "7/4", "2"], answer: "9/4" },
+    { question: "7/12 × 4/5 = ?", options: ["7/15", "28/60", "1/3", "4/12"], answer: "7/15" },
+    { question: "11/15 - 2/9 = ?", options: ["23/45", "9/6", "1/3", "7/15"], answer: "23/45" },
+    { question: "3/4 ÷ 3/8 = ?", options: ["2", "9/32", "1/2", "3/2"], answer: "2" },
+    { question: "2 1/3 - 5/6 = ?", options: ["3/2", "7/6", "4/3", "1 1/2"], answer: "3/2" },
+    { question: "5/9 ÷ 10/27 = ?", options: ["3/2", "50/243", "2/3", "5/3"], answer: "3/2" },
+    { question: "3 1/4 - 1 3/8 = ?", options: ["15/8", "2", "7/4", "13/8"], answer: "15/8" },
+    { question: "7/8 ÷ 7/16 = ?", options: ["2", "49/128", "1/2", "7/4"], answer: "2" },
+    { question: "4/5 + 7/15 = ?", options: ["19/15", "11/15", "1", "4/3"], answer: "19/15" },
+    { question: "2 2/3 × 3/8 = ?", options: ["1", "8/24", "3/4", "2/3"], answer: "1" },
+    { question: "9/14 ÷ 3/7 = ?", options: ["3/2", "27/98", "2/3", "7/6"], answer: "3/2" },
+    { question: "5/12 + 7/18 = ?", options: ["29/36", "12/30", "2/3", "11/18"], answer: "29/36" },
+    { question: "1 3/5 × 5/8 = ?", options: ["1", "8/40", "5/4", "4/5"], answer: "1" },
+    { question: "11/16 - 3/8 = ?", options: ["5/16", "8/8", "1/4", "3/16"], answer: "5/16" },
+    { question: "7/9 ÷ 14/27 = ?", options: ["3/2", "98/243", "2/3", "7/6"], answer: "3/2" },
+    { question: "2 1/4 + 1 5/6 = ?", options: ["25/12", "3", "4 1/12", "3 1/12"], answer: "25/12" },
+    { question: "8/15 ÷ 4/5 = ?", options: ["2/3", "32/75", "1/2", "4/9"], answer: "2/3" },
+    { question: "3 1/3 - 1 5/6 = ?", options: ["3/2", "7/4", "4/3", "5/3"], answer: "3/2" },
+    { question: "5/7 × 14/15 = ?", options: ["2/3", "70/105", "1/2", "7/9"], answer: "2/3" },
+    { question: "11/18 + 5/12 = ?", options: ["37/36", "16/30", "1", "7/9"], answer: "37/36" },
+    { question: "4/9 ÷ 8/27 = ?", options: ["3/2", "32/243", "2/3", "4/3"], answer: "3/2" },
+    { question: "2 3/4 × 4/11 = ?", options: ["1", "11/44", "3/4", "5/4"], answer: "1" },
+    { question: "13/20 - 3/8 = ?", options: ["11/40", "10/12", "1/4", "7/20"], answer: "11/40" },
+    { question: "5/6 ÷ 5/18 = ?", options: ["3", "25/108", "1/3", "5/3"], answer: "3" },
+    { question: "1 7/8 + 2 5/6 = ?", options: ["57/24", "4", "113/24", "7/2"], answer: "57/24" },
+    { question: "7/10 ÷ 7/30 = ?", options: ["3", "49/300", "1/3", "7/3"], answer: "3" },
+    { question: "3 1/6 - 1 7/12 = ?", options: ["19/12", "2", "7/6", "3/2"], answer: "19/12" },
+    { question: "9/16 × 8/15 = ?", options: ["3/10", "72/240", "1/3", "9/20"], answer: "3/10" },
+    { question: "5/8 ÷ 15/32 = ?", options: ["4/3", "75/256", "1/3", "5/6"], answer: "4/3" },
+    { question: "2 5/9 + 1 7/12 = ?", options: ["49/18", "4", "25/9", "4 5/36"], answer: "49/18" },
+    { question: "11/14 ÷ 11/21 = ?", options: ["3/2", "121/294", "2/3", "7/6"], answer: "3/2" },
+    { question: "4 1/5 - 2 7/10 = ?", options: ["3/2", "2", "7/5", "5/3"], answer: "3/2" },
+    { question: "7/15 × 5/14 = ?", options: ["1/6", "35/210", "1/3", "5/21"], answer: "1/6" },
+    { question: "13/18 - 5/12 = ?", options: ["11/36", "8/6", "1/3", "7/18"], answer: "11/36" },
+  ],
+};
 
-  const response = await fetch("/api/questions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
-  });
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error("HTTP " + response.status + ": " + err);
-  }
-  const data = await response.json();
-  const clean = data.text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+async function fetchAIQuestions(level) {
+  const bank = QUESTION_BANK[level];
+  const shuffled = shuffle([...bank]);
+  return shuffled.slice(0, 20);
 }
 
 function parseFraction(str) {
